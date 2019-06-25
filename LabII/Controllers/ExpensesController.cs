@@ -17,9 +17,11 @@ namespace LabII.Controllers
     public class ExpensesController : ControllerBase
     {
         private IExpenseService expenseService;
-        public ExpensesController(IExpenseService expenseService)
+        private IUsersService usersService;
+        public ExpensesController(IExpenseService expenseService, IUsersService usersService)
         {
             this.expenseService = expenseService;
+            this.usersService = usersService;
         }
         ///<remarks>
         ///{
@@ -113,9 +115,10 @@ namespace LabII.Controllers
         // POST: api/Expenses
         [Authorize]
         [HttpPost]
-        public void Post([FromBody] ExpennsePostModel expense)
+        public void Post([FromBody] ExpensePostModel expense)
         {
-            expenseService.Create(expense);
+            User addedBy = usersService.GetCurrentUser(HttpContext);
+            expenseService.Create(expense, addedBy);
         }
         ///<remarks>
         ///{

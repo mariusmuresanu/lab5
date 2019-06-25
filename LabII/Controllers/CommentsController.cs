@@ -12,11 +12,11 @@ namespace LabII.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CommentController : ControllerBase
+    public class CommentsController : ControllerBase
     {
         private ICommentService commentService;
 
-        public CommentController(ICommentService commentService)
+        public CommentsController(ICommentService commentService)
         {
             this.commentService = commentService;
         }
@@ -32,15 +32,17 @@ namespace LabII.Controllers
         /// 
         /// </summary>
         /// <param name="filter">Optional, filtered by text</param>
+        /// <param name="page"></param>
         /// <returns>List of comments</returns>
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         // GET: api/Comments
         [HttpGet]
-        public IEnumerable<CommentsGetDTO> Get([FromQuery]String filter)
+        public PaginatedList<CommentGetModel> Get([FromQuery]string filter, [FromQuery]int page = 1)
         {
-            return commentService.GetAll(filter);
+            page = Math.Max(page, 1);
+            return commentService.GetAll(page, filter);
         }
     }
 

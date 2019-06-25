@@ -6,21 +6,17 @@ using System.Threading.Tasks;
 
 namespace LabII.DTOs
 {
-    public class ExpennsePostModel
+    public class ExpensePostModel
     {
         public string Description { get; set; }
-
         public string Type { get; set; }
-
         public string Location { get; set; }
-
         public DateTime Date { get; set; }
-
         public string Currency { get; set; }
-
         public double Sum { get; set; }
+        public List<Comment> Comments { get; set; }
 
-        public static Expense ToExpense(ExpennsePostModel expense)
+        public static Expense ToExpense(ExpensePostModel expense)
         {
             Models.Type type = Models.Type.Clothes;
             if(expense.Type == "Utilities")
@@ -62,7 +58,8 @@ namespace LabII.DTOs
                 Location = expense.Location,
                 Date = expense.Date,
                 Currency = expense.Currency,
-                Sum = expense.Sum
+                Sum = expense.Sum,
+                Comments = expense.Comments
             };
         }
 

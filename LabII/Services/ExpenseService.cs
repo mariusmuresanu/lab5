@@ -10,32 +10,33 @@ namespace LabII.Services
 {
     public interface IExpenseService
     {
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="page"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         PaginatedList<ExpenseGetModel> GetAll(int page, DateTime? from=null, DateTime? to=null, Models.Type? type=null);
-
         Expense GetById(int id);
-
-        Expense Create(ExpennsePostModel user);
-
-        Expense Upsert(int id, Expense user);
-
+        Expense Create(ExpensePostModel expense, User addedBy);
+        Expense Upsert(int id, Expense expense);
         Expense Delete(int id);
-
     }
     public class ExpenseService : IExpenseService
     {       
-
         private ExpensesDbContext context;
-
         public ExpenseService(ExpensesDbContext context)
         {
             this.context = context;
         }
 
-
-        public Expense Create(ExpennsePostModel expense)
+        public Expense Create(ExpensePostModel expense, User addedBy)
         {
-            Expense toAdd = ExpennsePostModel.ToExpense(expense);
+            // TODO: how to store the user that added the flower as a field in Flower?
+            Expense toAdd = ExpensePostModel.ToExpense(expense);
+            toAdd.Owner = addedBy;
             context.Expenses.Add(toAdd);
             context.SaveChanges();
             return toAdd;
@@ -54,17 +55,22 @@ namespace LabII.Services
             context.SaveChanges();
             return existing;
         }
-       
+       /// <summary>
+       /// 
+       /// </summary>
+       /// <param name="page"></param>
+       /// <param name="from"></param>
+       /// <param name="to"></param>
+       /// <param name="type"></param>
+       /// <returns></returns>
         public PaginatedList<ExpenseGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null, Models.Type? type = null)
         {
             IQueryable<Expense> result = context
                 .Expenses
                 .OrderBy(e => e.Id)
-                
                 .Include(x => x.Comments);
             PaginatedList<ExpenseGetModel> paginatedResult = new PaginatedList<ExpenseGetModel>();
             paginatedResult.CurrentPage = page;
-            
 
             if ((from == null && to == null) && type == null)
 
@@ -92,7 +98,9 @@ namespace LabII.Services
 
         public Expense GetById(int id)
         {
-            return context.Expenses.Include(x => x.Comments).FirstOrDefault(e => e.Id == id);
+            return context.Expenses
+                .Include(x => x.Comments)
+                .FirstOrDefault(e => e.Id == id);
         }
 
         public Expense Upsert(int id, Expense expense)
@@ -103,7 +111,6 @@ namespace LabII.Services
                 context.Expenses.Add(expense);
                 context.SaveChanges();
                 return expense;
-
             }
 
             expense.Id = id;

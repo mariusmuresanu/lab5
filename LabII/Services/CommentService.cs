@@ -11,7 +11,7 @@ namespace LabII.Services
     public interface ICommentService
     {
 
-        IEnumerable<CommentsGetDTO> GetAll(String filter);
+        PaginatedList<CommentGetModel> GetAll(int page, string filter);
 
     }
 
@@ -19,55 +19,28 @@ namespace LabII.Services
     {
 
         private ExpensesDbContext context;
-
         public CommentService(ExpensesDbContext context)
         {
             this.context = context;
         }
 
-        public IEnumerable<CommentsGetDTO> GetAll(String filter)
+        public PaginatedList<CommentGetModel> GetAll(int page, string filter)
         {
-            IQueryable<Expense> result = context.Expenses.Include(c => c.Comments);
+            IQueryable<Comment> result = context
+                .Comments
+                .Where(c => string.IsNullOrEmpty(filter) || c.Text.Contains(filter))
+                .OrderBy(c => c.Id)
+                .Include(c => c.Expense);
+            var paginatedResult = new PaginatedList<CommentGetModel>();
+            paginatedResult.CurrentPage = page;
 
-            List<CommentsGetDTO> resultComments = new List<CommentsGetDTO>();
-            List<CommentsGetDTO> resultCommentsAll = new List<CommentsGetDTO>();
+            paginatedResult.NumberOfPages = (result.Count() - 1) / PaginatedList<CommentGetModel>.EntriesPerPage + 1;
+            result = result
+                .Skip((page - 1) * PaginatedList<CommentGetModel>.EntriesPerPage)
+                .Take(PaginatedList<CommentGetModel>.EntriesPerPage);
+            paginatedResult.Entries = result.Select(c => CommentGetModel.FromComment(c)).ToList();
 
-            foreach (Expense expense in result)
-            {
-                expense.Comments.ForEach(c =>
-                {
-                    if(c.Text==null || filter == null)
-                    {
-                        CommentsGetDTO comment = new CommentsGetDTO
-                        {
-                            Id = c.Id,
-                            Important = c.Important,
-                            Text = c.Text,
-                            ExpenseId = expense.Id
-
-                        };
-                        resultCommentsAll.Add(comment);
-                    }
-                    else if (c.Text.Contains(filter))
-                    {
-                        CommentsGetDTO comment = new CommentsGetDTO
-                        {
-                            Id = c.Id,
-                            Important = c.Important,
-                            Text = c.Text,
-                            ExpenseId = expense.Id
-
-                        };
-                        resultComments.Add(comment);
-
-                    }
-                });
-            }
-            if(filter == null)
-            {
-                return resultCommentsAll;
-            }
-            return resultComments;
+            return paginatedResult;
         }
     }
 }
