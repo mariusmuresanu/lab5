@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LabII.DTOs;
 using LabII.Models;
 using LabII.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,6 +38,7 @@ namespace LabII.Controllers
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Regular, Admin")]
         // GET: api/Comments
         [HttpGet]
         public PaginatedList<CommentGetModel> Get([FromQuery]string filter, [FromQuery]int page = 1)

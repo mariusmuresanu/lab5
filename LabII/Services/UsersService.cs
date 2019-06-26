@@ -1,6 +1,7 @@
 ﻿using LabII.DTOs;
 using LabII.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -20,6 +21,11 @@ namespace LabII.Services
         UserGetModel Register(RegisterPostModel registerInfo);
         User GetCurrentUser(HttpContext httpContext);
         IEnumerable<UserGetModel> GetAll();
+
+        User GetById(int id);
+        User Create(UserPostModel user);
+        User Upsert(int id, UserPostModel userPostModel, User addedBy);
+        User Delete(int id);
     }
 
     public class UsersService : IUsersService
@@ -51,7 +57,8 @@ namespace LabII.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.Username.ToString())
+                    new Claim(ClaimTypes.Name, user.Username.ToString()),
+                    new Claim(ClaimTypes.Role, user.UserRole.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -97,7 +104,8 @@ namespace LabII.Services
                 LastName = registerInfo.LastName,
                 FirstName = registerInfo.FirstName,
                 Password = ComputeSha256Hash(registerInfo.Password),
-                Username = registerInfo.Username
+                Username = registerInfo.Username,
+                UserRole = UserRole.Regular
             });
 
             context.SaveChanges();
@@ -123,5 +131,75 @@ namespace LabII.Services
                 Token = null
             });
         }
+        public User GetById(int id)
+        {
+            return context.Users
+                .FirstOrDefault(u => u.Id == id);
+        }
+
+        public User Create(UserPostModel user)
+        {
+            User toAdd = UserPostModel.ToUser(user);
+
+            context.Users.Add(toAdd);
+            context.SaveChanges();
+            return toAdd;
+
+        }
+
+        public User Upsert(int id, UserPostModel user, User addedBy)
+        {
+            var existing = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
+            if (existing == null)
+            {
+                User toAdd = UserPostModel.ToUser(user);
+                user.Password = ComputeSha256Hash(user.Password);
+                context.Users.Add(toAdd);
+                context.SaveChanges();
+                return toAdd;
+            }
+
+            User toUpdate = UserPostModel.ToUser(user);
+            toUpdate.Password = existing.Password;
+            toUpdate.CreatedAt = existing.CreatedAt;
+            toUpdate.Id = id;
+
+            if (user.UserRole.Equals("Admin") && !addedBy.UserRole.Equals(UserRole.Admin))
+            {
+                return null;
+            }
+            else if ((existing.UserRole.Equals(UserRole.Regular) && addedBy.UserRole.Equals(UserRole.UserManager)) ||
+                (existing.UserRole.Equals(UserRole.UserManager) && addedBy.UserRole.Equals(UserRole.UserManager) && addedBy.CreatedAt.AddMonths(6) <= DateTime.Now))
+            {
+                context.Users.Update(toUpdate);
+                context.SaveChanges();
+                return toUpdate;
+            }
+            else if (addedBy.UserRole.Equals(UserRole.Admin))
+            {
+                context.Users.Update(toUpdate);
+                context.SaveChanges();
+                return toUpdate;
+            }
+
+
+            return null;
+        }
+
+        public User Delete(int id)
+        {
+            var existing = context.Users.FirstOrDefault(user => user.Id == id);
+            if (existing == null)
+            {
+                return null;
+            }
+
+            context.Users
+                .Remove(existing);
+            context.SaveChanges();
+            return existing;
+        }
     }
 }
+    
+

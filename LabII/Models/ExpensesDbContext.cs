@@ -23,6 +23,11 @@ namespace LabII.Models
                 .HasOne(e => e.Expense)
                 .WithMany(c => c.Comments)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Expense>()
+                .HasOne(o => o.Owner)
+                .WithMany(e => e.Expenses)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<Expense> Expenses { get; set; }

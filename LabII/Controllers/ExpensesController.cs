@@ -57,6 +57,7 @@ namespace LabII.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         // GET: api/Expenses
+        [Authorize(Roles = "Regular,Admin")]
         [HttpGet]
         public PaginatedList<ExpenseGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]Models.Type? type, [FromQuery]int page = 1)
         {
@@ -85,6 +86,7 @@ namespace LabII.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         // GET: api/Expenses/5
+        [Authorize(Roles = "Regular,Admin")]
         [HttpGet("{id}", Name = "Get")]
         public IActionResult Get(int id)
         {
@@ -113,11 +115,16 @@ namespace LabII.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         // POST: api/Expenses
-        [Authorize]
+        [Authorize(Roles = "Regular,Admin")]
         [HttpPost]
         public void Post([FromBody] ExpensePostModel expense)
         {
+            // NEXT TIME: folosirea permisiunilor.
             User addedBy = usersService.GetCurrentUser(HttpContext);
+            //if (addedBy.UserRole == UserRole.UserManager)
+            //{
+            //    return Forbid();
+            //}
             expenseService.Create(expense, addedBy);
         }
         ///<remarks>
@@ -140,6 +147,7 @@ namespace LabII.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         // PUT: api/Expenses/5
+        [Authorize(Roles = "Regular,Admin")]
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] Expense expense)
         {
@@ -167,6 +175,7 @@ namespace LabII.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         // DELETE: api/ApiWithActions/5
+        [Authorize(Roles = "Regular,Admin")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
