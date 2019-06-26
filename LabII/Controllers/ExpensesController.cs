@@ -57,7 +57,8 @@ namespace LabII.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         // GET: api/Expenses
-        [Authorize(Roles = "Regular,Admin")]
+        //[AllowAnonymous]
+       // [Authorize(Roles = "Regular,Admin")]
         [HttpGet]
         public PaginatedList<ExpenseGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]Models.Type? type, [FromQuery]int page = 1)
         {
@@ -86,7 +87,7 @@ namespace LabII.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         // GET: api/Expenses/5
-        [Authorize(Roles = "Regular,Admin")]
+       // [Authorize(Roles = "Regular,Admin")]
         [HttpGet("{id}", Name = "Get")]
         public IActionResult Get(int id)
         {

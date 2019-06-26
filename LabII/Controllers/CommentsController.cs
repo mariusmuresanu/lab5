@@ -38,7 +38,7 @@ namespace LabII.Controllers
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize(Roles = "Regular, Admin")]
+        //[Authorize(Roles = "Regular, Admin")]
         // GET: api/Comments
         [HttpGet]
         public PaginatedList<CommentGetModel> Get([FromQuery]string filter, [FromQuery]int page = 1)
